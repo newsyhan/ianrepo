@@ -11,13 +11,18 @@ local scene = composer.newScene()
 -- include Corona's "widget" library
 local widget = require "widget"
 
+local physics = require "physics"
+
 --------------------------------------------
 local amount = 3
 local stone;
 
+local mountain = display.newImage( "mountain.png", display.contentWidth, display.contentHeight)
 local vertices = {0, 0,  20, -20,   0, -30,   -5, -27,  -10, -20,  -15, -15,  -20, -6,  -22, 0,  
 					-20, 6,  -15, 15,  -10, 20,  -5, 27,  0, 30,  20, 20}
-local bird;
+local bird
+local up = false
+local impulse = -60
 
 function createNewStone() 
 	stone = display.newCircle(0, 0, math.random(10, 40))
@@ -39,16 +44,47 @@ end
 
 function scene:create( event )
 
-	local mountain = display.newImage( "mountain.png", display.contentWidth, display.contentHeight)
+	physics.start()
+	-- physics.setScale(90)
+	physics.pause()
+
 	mountain.anchorX = 0
 	mountain.anchorY = 0
 	mountain.x = 0
 	mountain.y = 0
 
-	bird = display.newPolygon( 50, 160, vertices )
+	mountain:addEventListener("touch", movePlayer)
+	Runtime:addEventListener("enterFrame", update)
+
+	bird = display.newImage("CoronaSDK_Helicopter_9.png", 100, 100)
 	bird:setFillColor( 1, 0, 0 )
 
+	--physics.addBody(bird)
+	physics.addBody(bird, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
+
+	physics.start()
+
 end
+
+function movePlayer( event )
+	if (event.phase == "began") then
+		up = true;
+	elseif (event.phase == "ended") then
+		up = false;
+		impulse = -60
+	end
+
+end
+
+function update( event )
+
+	if (up) then
+		impulse = impulse - 3
+		bird:setLinearVelocity(0, impulse)
+	end
+
+end
+
 
 function scene:show( event )
 	local sceneGroup = self.view
@@ -63,6 +99,8 @@ function scene:show( event )
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
+		
+
 		timer.performWithDelay( 1, scrollStone, -1 )
 
 	end	
