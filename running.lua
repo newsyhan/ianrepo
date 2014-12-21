@@ -24,6 +24,13 @@ local bird
 local up = false
 local impulse = -60
 
+-- hellicopter sprite group
+local helliGroup = display.newGroup()
+local helli
+local helli_up
+
+
+
 function createNewStone() 
 	stone = display.newCircle(0, 0, math.random(10, 40))
 	stone.strokeWidth = 2
@@ -45,33 +52,38 @@ end
 function scene:create( event )
 
 	physics.start()
-	-- physics.setScale(90)
 	physics.pause()
 
+	-- background setting
 	mountain.anchorX = 0
 	mountain.anchorY = 0
 	mountain.x = 0
 	mountain.y = 0
 
-	mountain:addEventListener("touch", movePlayer)
-	Runtime:addEventListener("enterFrame", update)
+	--bird = display.newImage("CoronaSDK_Helicopter_9.png", 100, 100)
 
-	bird = display.newImage("CoronaSDK_Helicopter_9.png", 100, 100)
-	bird:setFillColor( 1, 0, 0 )
+	helliGroup = display.newGroup()
+	helli = display.newImage(helliGroup, "helicopter.png", 100, 100)
+	helli_up = display.newImage(helliGroup, "helicopter_up.png", 100, 100)
+	helli_up.isVisible = false
 
 	--physics.addBody(bird)
-	physics.addBody(bird, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
+	physics.addBody(helliGroup, "dynamic", {density = 1, friction = 0, bounce = 1, isSensor = false, radius = 15})
 
-	physics.start()
+	
 
 end
 
 function movePlayer( event )
 	if (event.phase == "began") then
 		up = true;
+		helli.isVisible = false
+		helli_up.isVisible = true
 	elseif (event.phase == "ended") then
 		up = false;
 		impulse = -60
+		helli.isVisible = true
+		helli_up.isVisible = false
 	end
 
 end
@@ -80,18 +92,22 @@ function update( event )
 
 	if (up) then
 		impulse = impulse - 3
-		bird:setLinearVelocity(0, impulse)
+		helliGroup:setLinearVelocity(0, impulse)
 	end
 
 end
 
 
 function scene:show( event )
+
 	local sceneGroup = self.view
 	local phase = event.phase
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+		physics.start()
+		mountain:addEventListener("touch", movePlayer)
+		Runtime:addEventListener("enterFrame", update)
 		createNewStone()
 
 	elseif phase == "did" then
@@ -99,7 +115,6 @@ function scene:show( event )
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
-		
 
 		timer.performWithDelay( 1, scrollStone, -1 )
 
