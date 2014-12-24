@@ -13,6 +13,8 @@ local widget = require "widget"
 
 local physics = require "physics"
 
+local CBE = require "CBEffects.Library"
+
 --------------------------------------------
 local amount = 3
 local stone;
@@ -24,11 +26,11 @@ local bird
 local up = false
 local impulse = -60
 
+
 -- hellicopter sprite group
 local helliGroup = display.newGroup()
 local helli
 local helli_up
-
 
 
 function createNewStone() 
@@ -109,6 +111,55 @@ function scene:show( event )
 		mountain:addEventListener("touch", movePlayer)
 		Runtime:addEventListener("enterFrame", update)
 		createNewStone()
+
+		-- rain particle
+		local heavy_rain
+		heavy_rain = CBE.VentGroup {
+			{
+				preset = "rain",
+				title = "plink",
+				positionType = "atPoint",
+				build = function ()
+					return display.newImageRect("grow-1.png", 10, 10)
+				end,
+				alpha = 0.3,
+				startAlpha = 0.3,
+				endAlpha = 0.3,
+				lifeStart = 0,
+				fadeInTime = 0,
+				lifeSpan = 100,
+				physics = {
+					sizeX = 1.5,
+					velocity = 0			
+				}	 
+			},
+			{
+				preset = "rain",
+				title = "rain",
+				perEmit = 7,
+				positionType = "inRect",
+				rectLeft = 50,
+				rectTop = -150,
+				rectWidth = 1024,
+				rectHeight = 150,
+				build = function()
+					return display.newImageRect("glow-1.png", 10, 80)
+				end,
+				onDeath = function(particle, vent)
+					heavy_rain:translate("plink", particle.x, particle.y)
+					heavy_rain:emit("plink")
+				end,
+				lifeStart = 500,
+				lifeSpan = 50,
+				physics = {
+					autoAngle = false,
+					angles = { 270 },
+					velocity = 20
+				}
+			}
+		}
+		heavy_rain:start("rain")
+
 
 	elseif phase == "did" then
 		-- Called when the scene is now on screen

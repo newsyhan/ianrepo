@@ -11,5 +11,5 @@ display.setStatusBar( display.HiddenStatusBar )
 local composer = require "composer"
 
 -- load menu screen
-composer.gotoScene( "running" )
+composer.gotoScene( "particleTest" )
 
