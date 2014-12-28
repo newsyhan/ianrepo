@@ -45,7 +45,8 @@ local score = 0
 local reStartTimerId
 local stoneTimerId
 
--- local explosionSound
+local explosionSound
+
 local helicopterSound
 local bg1Sound
 
@@ -81,10 +82,19 @@ end
 
 
 function createNewStone() 
-	stone = display.newCircle(0, 0, math.random(10, 40))
-	stone.strokeWidth = 2
-	stone:setFillColor( math.random(200, 255) / 256, math.random(200, 255) / 256, math.random(200, 255) / 256 )
-	stone:setStrokeColor( math.random(0, 100) / 256, math.random(0, 100) / 256, math.random(0, 100) / 256 )
+	-- stone = display.newCircle(0, 0, math.random(10, 40))
+	-- stone.strokeWidth = 2
+	-- stone:setFillColor( math.random(200, 255) / 256, math.random(200, 255) / 256, math.random(200, 255) / 256 )
+	-- stone:setStrokeColor( math.random(0, 100) / 256, math.random(0, 100) / 256, math.random(0, 100) / 256 )
+
+	local stoneType = math.random(1, 10)
+	print ("stoneType " .. stoneType)
+	
+	if ( stoneType < 4) then
+		stone = display.newImage("resources/images/missile2.png")
+	else
+		stone = display.newImage("resources/images/missile1.png")
+	end
 	stone.x = display.contentWidth
 	stone.y = math.random(30, display.contentHeight - 30 - stone.height)
 	amount = math.random(7, 17)
@@ -98,7 +108,7 @@ function createNewStone()
 		stoneRadius = 1
 	end
 	-- print ( "stoneRadius : " .. stoneRadius )
-	physics.addBody(stone, "static", { radius=stoneRadius, isSensor=true })
+	physics.addBody(stone, "static", { isSensor=true })
 end
 
 function scrollStone()
@@ -156,7 +166,7 @@ function changeHellicopter( status )
 		end
 	else
 
-		media.playEventSound ( "resources/sounds/explosion1.mp3" )
+		media.playEventSound ( explosionSound )
 
 		-- audio.play ( explosionSound )
 		heli_stop.isVisible = false
@@ -216,11 +226,13 @@ end
 
 local function update( event )
 
-	-- print ( "heliGroup.rotation : " .. heliGroup.rotation )
+	-- print ( "heliGroup.y : " .. heliGroup.y )
 
 	if ( up ) then
-		impulse = impulse - 20
-		heliGroup:setLinearVelocity(0, impulse)
+		if ( heliGroup.y > 7 ) then
+			impulse = impulse - 20
+			heliGroup:setLinearVelocity(0, impulse)
+		end
 	end
 
 	if (heliGroup.y >= 289 and HELI_STATUS == HELI_FLY) then
@@ -328,13 +340,14 @@ function scene:create( event )
 	physics.addBody(ground, "static", { friction=0.3, shape=groundshape } )
 
 	-- sky limit
-	local skyWall = display.newRect ( 0, -20, display.contentWidth, 10)
+	local skyWall = display.newRect ( 0, 0, display.contentWidth, 10)
 	skyWall.anchorX, skyWall.anchorY = 0, 1
-	physics.addBody(skyWall, "static")
+	physics.addBody(skyWall, "static", {bounce=0})
 
 	sceneGroup:insert( heliGroup )
 
 	-- explosionSound = audio.loadSound("resources/sounds/explosion1.wav")
+	explosionSound = media.newEventSound( "resources/sounds/explosion1.mp3" )
 	helicopterSound = audio.loadSound("resources/sounds/helicopter1.wav")
 	bg1Sound = audio.loadSound("resources/sounds/music2.wav")
 
