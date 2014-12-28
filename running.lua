@@ -45,10 +45,11 @@ local score = 0
 local reStartTimerId
 local stoneTimerId
 
-local explosionSound
+-- local explosionSound
 local helicopterSound
+local bg1Sound
 
-local helicopterChannel
+local helicopterChannel = 0
 
 
 function loadGroundLayer( sceneGroup, imageName )
@@ -91,12 +92,12 @@ function createNewStone()
 	stone.myName = "stone"
 
 	-- calcurate radius
-	print ( "stone.width : " .. stone.width )
+	-- print ( "stone.width : " .. stone.width )
 	local stoneRadius = (stone.width * 0.5) - 3
 	if ( stoneRadius <= 0 ) then
 		stoneRadius = 1
 	end
-	print ( "stoneRadius : " .. stoneRadius )
+	-- print ( "stoneRadius : " .. stoneRadius )
 	physics.addBody(stone, "static", { radius=stoneRadius, isSensor=true })
 end
 
@@ -120,29 +121,55 @@ function changeHellicopter( status )
 			heli_up.isVisible = false
 			heli_fly.isVisible = true
 			heli_explosion.isVisible = false
-			helicopterChannel = audio.play(helicopterSound, {loops = -1})
+			
+			if(helicopterChannel == 0) then
+				helicopterChannel = audio.play(helicopterSound, {loops = -1})
+				print ( "FLY PLAY... " .. helicopterChannel)
+			end
+			
 			groundMoveSpeed = 4
 		elseif ( status == HELI_UP) then
 			heli_stop.isVisible = false
 			heli_fly.isVisible = false
 			heli_up.isVisible = true
 			heli_explosion.isVisible = false
-			helicopterChannel = audio.play(helicopterSound, {loops = -1})
+
+			if(helicopterChannel == 0) then
+				helicopterChannel = audio.play(helicopterSound, {loops = -1})
+				print ( "UP PLAY... " .. helicopterChannel)
+			end
+			
 			groundMoveSpeed = 4
 		elseif ( status == HELI_STOP) then
 			heli_stop.isVisible = true
 			heli_fly.isVisible = false
 			heli_up.isVisible = false
 			heli_explosion.isVisible = false
-			audio.stop(helicopterChannel)
+
+			if(helicopterChannel ~= 0) then
+				audio.stop(helicopterChannel)
+				helicopterChannel = 0
+				print ( "AUDIO STOP... " .. helicopterChannel)
+			end
+			
 			groundMoveSpeed = 0
 		end
 	else
+
+		media.playEventSound ( "resources/sounds/explosion1.mp3" )
+
+		-- audio.play ( explosionSound )
 		heli_stop.isVisible = false
 		heli_fly.isVisible = false
 		heli_up.isVisible = false
 		heli_explosion.isVisible = true
-		audio.stop(helicopterChannel)
+
+		if(helicopterChannel ~= 0) then
+			audio.stop(helicopterChannel)
+			helicopterChannel = 0
+			print ( "AUDIO STOP... " .. helicopterChannel)
+		end
+
 		groundMoveSpeed = 0
 	end
 end
@@ -225,6 +252,10 @@ function reStart ( event )
 	backWall:addEventListener("touch", movePlayer)
 end
 
+function explosionHelicopter ( event )
+	changeHellicopter ( HELI_EXPLOSION )
+end
+
 
 function onCollision( event )
 	-- body
@@ -232,11 +263,12 @@ function onCollision( event )
 		if ( event.object1.myName == "heliGroup" and event.object2.myName == "stone" ) then
 			if ( HELI_STATUS ~= HELI_EXPLOSION ) then
 				print ("폭발...")
-				audio.play ( explosionSound )
+				changeHellicopter ( HELI_EXPLOSION )
+				-- audio.play ( explosionSound, {onComplete=explosionHelicopter} )
+
 				up = false
 				heliGroup:setLinearVelocity(0, 100)
 				backWall:removeEventListener("touch", movePlayer)
-				changeHellicopter ( HELI_EXPLOSION )
 				reStartTimerId = timer.performWithDelay (4000, reStart)
 				timer.cancel ( stoneTimerId )
 			end
@@ -302,8 +334,10 @@ function scene:create( event )
 
 	sceneGroup:insert( heliGroup )
 
-	explosionSound = audio.loadSound("resources/sounds/explosion1.wav")
-	helicopterSound = audio.loadSound("resources/sounds/helicopter.wav")
+	-- explosionSound = audio.loadSound("resources/sounds/explosion1.wav")
+	helicopterSound = audio.loadSound("resources/sounds/helicopter1.wav")
+	bg1Sound = audio.loadSound("resources/sounds/music2.wav")
+
 end
 
 function scene:show( event )
@@ -318,6 +352,8 @@ function scene:show( event )
 		createNewStone()
 
 		changeHellicopter( HELI_FLY )
+
+		audio.play(bg1Sound, {loops=-1})
 
 		Runtime:addEventListener("collision", onCollision)
 
